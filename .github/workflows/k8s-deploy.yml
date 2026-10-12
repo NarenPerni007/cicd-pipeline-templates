@@ -1,0 +1,120 @@
+# Deploy to EKS
+#
+# Two triggers:
+#   1. Automatically after the "Docker Build & Push" workflow completes
+#      successfully on main (workflow_run) -- continuous delivery.
+#   2. Manually via workflow_dispatch -- pick an image tag and environment
+#      (useful for rollbacks or promoting a specific build).
+#
+# The image tag deployed defaults to the short SHA of the commit that
+# triggered the docker build. For manual runs you choose the tag yourself.
+#
+# Required secrets/variables (repo or environment level):
+#   AWS_ROLE_TO_ASSUME - ARN of the IAM role GitHub can assume via OIDC
+#   AWS_REGION         - variable, e.g. us-east-1
+#   EKS_CLUSTER_NAME   - variable, name of the EKS cluster
+#   K8S_NAMESPACE      - variable, target namespace (defaults to "default")
+#   KUSTOMIZE_DIR      - variable, path to kustomize overlay/base (defaults to "k8s/overlays/prod")
+
+name: Deploy to EKS
+
+on:
+  workflow_run:
+    workflows: ['Docker Build & Push']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (e.g. sha-a1b2c3d or 1.2.3). Defaults to the triggering commit SHA.'
+        required: false
+        type: string
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE || 'default' }}
+  KUSTOMIZE_DIR: ${{ vars.KUSTOMIZE_DIR || 'k8s/overlays/prod' }}
+  DEPLOY_ENV: ${{ inputs.environment || 'production' }}
+
+# Least-privilege permissions:
+#   contents: read  - checkout code
+#   id-token: write - request an OIDC token for AWS auth
+# (no actions:write needed; workflow_run is read-only context here)
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  # Serialize deploys per environment -- never deploy two revisions at once.
+  group: deploy-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to ${{ env.DEPLOY_ENV }}
+    runs-on: ubuntu-latest
+    # Only deploy when the docker build actually succeeded.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success')
+    environment: ${{ inputs.environment || 'production' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --region "$AWS_REGION" \
+            --name "$EKS_CLUSTER_NAME"
+
+      - name: Resolve image tag
+        id: image
+        run: |
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            TAG="${{ inputs.image_tag }}"
+          else
+            # workflow_run trigger: tag matches the image pushed by the docker build
+            SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+            TAG="sha-${SHORT_SHA}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Deploying image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+
+      - name: Set image in kustomize overlay
+        working-directory: ${{ env.KUSTOMIZE_DIR }}
+        run: |
+          kustomize edit set image "app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.image.outputs.tag }}"
+
+      - name: Apply manifests
+        run: |
+          kubectl apply -k "${{ env.KUSTOMIZE_DIR }}" --namespace "${{ env.K8S_NAMESPACE }}"
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app \
+            --namespace "${{ env.K8S_NAMESPACE }}" \
+            --timeout=300s
+
+      - name: Verify pods are healthy
+        run: |
+          kubectl get pods \
+            --namespace "${{ env.K8S_NAMESPACE }}" \
+            -l app.kubernetes.io/name=app
