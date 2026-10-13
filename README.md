@@ -24,7 +24,7 @@ Set these at repo level (Settings → Secrets and variables → Actions), or per
 | `AWS_REGION` | 📦 variable | terraform, k8s-deploy | AWS region, e.g. `us-east-1` |
 | `EKS_CLUSTER_NAME` | 📦 variable | k8s-deploy | Name of the EKS cluster |
 | `TF_WORKING_DIR` | 📦 variable | terraform | Path to Terraform root module (default: `terraform`) |
-| `TF_VERSION` | 📦 variable | terraform | Terraform version (default: `1.9.8`) |
+| `TF_VERSION` | 📦 variable | terraform | Terraform version (default: `1.16.5`) |
 | `K8S_NAMESPACE` | 📦 variable | k8s-deploy | Target namespace (default: `default`) |
 | `KUSTOMIZE_DIR` | 📦 variable | k8s-deploy | Path to kustomize overlay (default: `k8s/overlays/prod`) |
 | `DOCKERFILE_PATH` | 📦 variable | docker-build-push | Path to Dockerfile (default: `Dockerfile`) |

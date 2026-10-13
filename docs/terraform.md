@@ -16,7 +16,7 @@ The path filter keeps unrelated PRs (docs, app code) from burning Terraform runs
 | `AWS_ROLE_TO_ASSUME` | secret | IAM role ARN that GitHub assumes via OIDC (e.g. `arn:aws:iam::123456789012:role/github-terraform`) |
 | `AWS_REGION` | variable | AWS region, e.g. `us-east-1` (default: `us-east-1`) |
 | `TF_WORKING_DIR` | variable | Path to the Terraform root module (default: `terraform`) |
-| `TF_VERSION` | variable | Terraform version to install (default: `1.9.8`) |
+| `TF_VERSION` | variable | Terraform version to install (default: `1.16.5`) |
 
 Protect the `production` environment with **required reviewers** (Settings → Environments → production) to get manual approval before every apply.
 
