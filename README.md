@@ -1,6 +1,6 @@
 # CI/CD Pipeline Templates
 
-Reusable GitHub Actions workflows for **Terraform**, **Docker**, and **Kubernetes** deployments — the same patterns I use to ship infrastructure and containerized apps on AWS.
+Reusable GitHub Actions workflows for **Terraform**, **Docker**, and **Kubernetes** deployments - the same patterns I use to ship infrastructure and containerized apps on AWS.
 
 No static AWS keys anywhere: every workflow authenticates to AWS with **OIDC** (`aws-actions/configure-aws-credentials`), and every workflow declares **least-privilege permissions**.
 
@@ -29,9 +29,9 @@ Set these at repo level (Settings → Secrets and variables → Actions), or per
 | `KUSTOMIZE_DIR` | 📦 variable | k8s-deploy | Path to kustomize overlay (default: `k8s/overlays/prod`) |
 | `DOCKERFILE_PATH` | 📦 variable | docker-build-push | Path to Dockerfile (default: `Dockerfile`) |
 
-## OIDC setup (AWS side) — 5 minutes
+## OIDC setup (AWS side) - 5 minutes
 
-1. **Create an OIDC provider** in IAM for `token.actions.githubusercontent.com` (audience `sts.amazonaws.com`) — one-time per AWS account.
+1. **Create an OIDC provider** in IAM for `token.actions.githubusercontent.com` (audience `sts.amazonaws.com`) - one-time per AWS account.
 2. **Create an IAM role** (e.g. `github-actions`) with the policies your workflows need (Terraform: your infra policies; EKS deploy: `eks:DescribeCluster` plus cluster access via access entries).
 3. **Set the trust policy** so only your repo can assume it:
    ```json

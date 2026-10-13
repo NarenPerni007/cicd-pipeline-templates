@@ -1,4 +1,4 @@
-# Docker Build & Push — `docker-build-push.yml`
+# Docker Build & Push - `docker-build-push.yml`
 
 ## Trigger
 
@@ -13,7 +13,7 @@ Tag generation is handled by `docker/metadata-action@v5`, so release tags follow
 
 | Name | Type | Description |
 |---|---|---|
-| *(none required)* | — | Auth to GHCR uses the built-in `GITHUB_TOKEN` (`packages: write`) |
+| *(none required)* | - | Auth to GHCR uses the built-in `GITHUB_TOKEN` (`packages: write`) |
 | `DOCKERFILE_PATH` | variable | Path to the Dockerfile (default: `Dockerfile`) |
 | `BUILD_CONTEXT` | variable | Docker build context (default: `.`) |
 
@@ -42,6 +42,6 @@ push to main  OR  tag v*.*.*
 ## Notes
 
 - The image is built **twice in one job** (once with `load: true` for the scanner, once with `push: true`) so a vulnerable image can never reach the registry. Buildx layer caching (`type=gha`) keeps the second build fast.
-- Trivy (`aquasecurity/trivy-action`) runs with `exit-code: '1'` and `severity: 'HIGH,CRITICAL'` — the run fails before any push happens. `ignore-unfixed: true` avoids failing on CVEs with no available fix.
+- Trivy (`aquasecurity/trivy-action`) runs with `exit-code: '1'` and `severity: 'HIGH,CRITICAL'` - the run fails before any push happens. `ignore-unfixed: true` avoids failing on CVEs with no available fix.
 - Permissions are least-privilege: `contents: read` (checkout), `packages: write` (push to GHCR).
-- `concurrency: group: docker-${{ github.ref }}` with `cancel-in-progress: true` cancels stale builds on rapid pushes — safe here because nothing is deployed directly by this workflow.
+- `concurrency: group: docker-${{ github.ref }}` with `cancel-in-progress: true` cancels stale builds on rapid pushes - safe here because nothing is deployed directly by this workflow.

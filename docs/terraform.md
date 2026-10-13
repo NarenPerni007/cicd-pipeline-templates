@@ -1,11 +1,11 @@
-# Terraform CI/CD — `terraform.yml`
+# Terraform CI/CD - `terraform.yml`
 
 ## Trigger
 
 | Event | Branches / paths | What happens |
 |---|---|---|
 | `pull_request` → `main` | changes under `terraform/**` or to this workflow file | fmt check → init → validate → plan; the plan is posted as a PR comment |
-| `push` → `main` | same path filter | plan runs again, then `terraform apply` — gated behind the `production` environment |
+| `push` → `main` | same path filter | plan runs again, then `terraform apply` - gated behind the `production` environment |
 
 The path filter keeps unrelated PRs (docs, app code) from burning Terraform runs.
 
@@ -54,5 +54,5 @@ PR opened / updated (terraform/** changed)
 ## Notes
 
 - Authentication is **OIDC** (`aws-actions/configure-aws-credentials@v4` with `role-to-assume`). No static `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets exist anywhere.
-- `concurrency: group: terraform-${{ github.ref }}` with `cancel-in-progress: false` serializes runs per branch without killing an in-flight apply — important because cancelling an apply mid-run can corrupt state.
+- `concurrency: group: terraform-${{ github.ref }}` with `cancel-in-progress: false` serializes runs per branch without killing an in-flight apply - important because cancelling an apply mid-run can corrupt state.
 - Permissions are least-privilege: `contents: read` (checkout), `pull-requests: write` (post plan comment), `id-token: write` (OIDC).

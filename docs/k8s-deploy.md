@@ -1,11 +1,11 @@
-# Deploy to EKS — `k8s-deploy.yml`
+# Deploy to EKS - `k8s-deploy.yml`
 
 ## Trigger
 
 | Event | Detail |
 |---|---|
-| `workflow_run` — "Docker Build & Push" completes on `main` | automatic continuous delivery; deploys the image tag the docker build just pushed |
-| `workflow_dispatch` | manual run; choose `image_tag` (e.g. `sha-a1b2c3d` or `1.2.3`) and `environment` (`production`/`staging`) — useful for rollbacks or promoting a specific build |
+| `workflow_run` - "Docker Build & Push" completes on `main` | automatic continuous delivery; deploys the image tag the docker build just pushed |
+| `workflow_dispatch` | manual run; choose `image_tag` (e.g. `sha-a1b2c3d` or `1.2.3`) and `environment` (`production`/`staging`) - useful for rollbacks or promoting a specific build |
 
 The automatic trigger only proceeds when the docker workflow **concluded with success** (`github.event.workflow_run.conclusion == 'success'`), so a failed scan or build never deploys.
 
@@ -43,7 +43,7 @@ The automatic trigger only proceeds when the docker workflow **concluded with su
 ## Notes
 
 - Image tagging is the contract between this workflow and `docker-build-push.yml`: the docker workflow pushes `sha-<short-sha>`, and this workflow resolves the same tag from the triggering run's commit SHA. They stay in sync without hardcoding.
-- `concurrency: group: deploy-<environment>` with `cancel-in-progress: false` serializes deployments per environment — two revisions can never deploy simultaneously.
+- `concurrency: group: deploy-<environment>` with `cancel-in-progress: false` serializes deployments per environment - two revisions can never deploy simultaneously.
 - The kustomize overlay is expected to define a `kustomization.yaml` whose `images` entry is named `app`; `kustomize edit set image` updates it in place before `kubectl apply -k`.
-- Authentication to AWS is **OIDC** — no static keys. The role needs `eks:DescribeCluster` (for `update-kubeconfig`) plus the EKS cluster's `aws-auth`/access-entry mapping for the deploying identity.
+- Authentication to AWS is **OIDC** - no static keys. The role needs `eks:DescribeCluster` (for `update-kubeconfig`) plus the EKS cluster's `aws-auth`/access-entry mapping for the deploying identity.
 - Permissions are least-privilege: `contents: read` (checkout), `id-token: write` (OIDC).
