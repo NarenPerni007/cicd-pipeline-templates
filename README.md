@@ -58,7 +58,7 @@ Copy the `.github/workflows/` directory into your own repository, then:
 1. Add the secrets/variables from the table above.
 2. Adjust `TF_WORKING_DIR` / `KUSTOMIZE_DIR` to match your repo layout.
 3. For EKS: grant the IAM role access to the cluster (EKS access entries or `aws-auth` ConfigMap).
-4. For Terraform: point `TF_WORKING_DIR` at a real root module (or drop in one from my [`terraform-aws-vpc-eks`](https://github.com/) module repo).
+4. For Terraform: point `TF_WORKING_DIR` at a real root module (or drop in one from my [`terraform-aws-eks`](https://github.com/NarenPerni007/terraform-aws-eks) module repo).
 
 ## Repo layout
 
